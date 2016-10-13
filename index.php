@@ -146,7 +146,7 @@ Please set ?address / &address to see QR Code.
 
 <div id="qrcode"></div>
 <script type="text/javascript">
-    new QRCode(document.getElementById("qrcode"), "<?=ADDRESS;?>");
+    new QRCode(document.getElementById("qrcode"), "navcoin:<?=ADDRESS;?>?amount=<?=amountToNAV();?>");
 </script>
 
 <?php
