@@ -91,11 +91,11 @@ if (isRefreshingContents()) {
         } catch (Exception $e) {        
             echo $f[2];
             
-        } finally {
-            if ($fp) {
-                @fclose($fp);
-            }            
         }
+        
+        if ($fp) {
+            @fclose($fp);
+        }            
     }
 }
 
