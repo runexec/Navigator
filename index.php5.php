@@ -1,9 +1,16 @@
+<html>
+  <head>
+      <script src="qrcode.min.js"></script>
+  </head>
+
+  <body>
 <?php
 
 # Input Constants
 @define('AMOUNT', $_GET['amount'] !== null ? floatval($_GET['amount']) : 0);
 @define('FIAT', $_GET['fiat'] !== null ? strtoupper($_GET['fiat']) : 'USD');
-    
+@define('ADDRESS', $_GET['address']);
+
 # File Constants
 define('BTC_FILE', '/tmp/navcalc.pairs.json');
 define('NAV_FILE', '/tmp/navcalc.btc_nav.json');
@@ -123,6 +130,29 @@ echo '<p></p>';
 
 echo currentFiatSymbol() . ' -> NAV: ' . amountToNAV();
 
+echo '<h3>Address QR Code</h3>';
+
+if (ADDRESS === null) {
+
+?>
+
+Please set ?address / &address to see QR Code.
+
+<?php
+    
+} else {
+
+?>
+
+<div id="qrcode"></div>
+<script type="text/javascript">
+    new QRCode(document.getElementById("qrcode"), "<?=ADDRESS;?>");
+</script>
+
+<?php
+
+}
+
 ?>
 
 <h3> Supported Pairs </h3>
@@ -147,3 +177,5 @@ SEK<br />
 NZD<br />
 BRL<br />
 RUB<br />
+  </body>
+</html>
