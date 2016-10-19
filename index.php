@@ -1,15 +1,14 @@
-<html>
-  <head>
-      <script src="qrcode.min.js"></script>
-  </head>
-
-  <body>
 <?php
+
+require __DIR__ . '/vendor/autoload.php';
+
+use \Endroid\QrCode\QrCode;
 
 # Input Constants
 @define('AMOUNT', $_GET['amount'] !== null ? floatval($_GET['amount']) : 0);
 @define('FIAT', $_GET['fiat'] !== null ? strtoupper($_GET['fiat']) : 'USD');
 @define('ADDRESS', $_GET['address']);
+@define('GUI', $_GET['gui'] == 'true' || $_GET['gui'] == 1);
 
 # File Constants
 define('BTC_FILE', '/tmp/navcalc.pairs.json');
@@ -83,10 +82,10 @@ if (isRefreshingContents()) {
         array(BTC_FILE, BTC_TICKER, BTC_TICKER_FAIL),
         array(NAV_FILE, NAV_TICKER, NAV_TICKER_FAIL)
     );
-    
+
     foreach ($file_info as $f) {        
         $fp = null;
-        
+
         try {
             $content = file_get_contents($f[1]);
 
@@ -97,7 +96,7 @@ if (isRefreshingContents()) {
 
         } catch (Exception $e) {        
             echo $f[2];
-            
+
         } finally {
             if ($fp) {
                 @fclose($fp);
@@ -106,76 +105,126 @@ if (isRefreshingContents()) {
     }
 }
 
-echo '<h1>Fiat to NAV Converter</h1>';
+# QR related
+function qrAddress(): string {
 
-echo '<b>Example: http://localhost:8000/?fiat=gbp&amp;amount=20</b>';
+    return 'navcoin:' . ADDRESS . '?amount=' . amountToNAV();
+}
 
-echo '<p></p>';
+if (!GUI) {
 
-echo 'Input Amount: ' . currentFiatSymbol() . AMOUNT;
+    header('Content-Type: application/json');
 
-echo '<p></p>';
+    $format = '{"current-nav-price": "%.8f", ' .
+            '"current-btc-price": "%.8f", ' .
+            '"btc-amount": "%.8f", ' .
+            '"nav-amount": "%.8f", ' .
+            '"fiat-amount": %d, ' .
+            '"fiat-symbol": "%s", ' .
+            '"address": "%s", ' .
+            '"qr": "%s"}';
 
-echo '1 BTC = ' . currentFiatSymbol() . currentPriceBTC();
 
-echo '<p></p>';
+    $qrCode = new QrCode();
 
-printf('1 NAV = %.8f BTC', currentPriceNAV());
+    $qrCode
+        ->setText(qrAddress())
+        ->setSize(500)
+        ->setPadding(8)
+        ->setErrorCorrection('high')
+        ->setForegroundColor(array('r' => 0, 'g' => 0, 'b' => 0, 'a' => 0))
+        ->setBackgroundColor(array('r' => 255, 'g' => 255, 'b' => 255, 'a' => 0))
+        ->setLabel('Scan NAV QR')
+        ->setLabelFontSize(16)
+        ->setImageType(QrCode::IMAGE_TYPE_PNG);
 
-echo '<p></p>';
+    printf($format,
+           currentPriceNAV(),
+           currentPriceBTC(),
+           amountToBTC(),
+           amountToNAV(),
+           AMOUNT,
+           currentFiatSymbol(),
+           ADDRESS,
+           $qrCode->getDataUri());
 
-echo currentFiatSymbol() . ' -> BTC: ' . amountToBTC();
-
-echo '<p></p>';
-
-echo currentFiatSymbol() . ' -> NAV: ' . amountToNAV();
-
-echo '<h3>Address QR Code</h3>';
-
-if (ADDRESS === null) {
-
-?>
-
-Please set ?address / &address to see QR Code.
-
-<?php
-    
 } else {
 
-?>
+    ?>
 
-<div id="qrcode"></div>
-<script type="text/javascript">
-    new QRCode(document.getElementById("qrcode"), "navcoin:<?=ADDRESS;?>?amount=<?=amountToNAV();?>");
-</script>
+    <html>
+	<head>
+    <script src="qrcode.min.js"></script>
+	</head>
+
+	<body>
+
+	    <?php
+	    
+	    echo 'Input Amount: ' . currentFiatSymbol() . AMOUNT;
+
+	    echo '<p></p>';
+
+	    echo '1 BTC = ' . currentFiatSymbol() . currentPriceBTC();
+
+	    echo '<p></p>';
+
+	    printf('1 NAV = %.8f BTC', currentPriceNAV());
+
+	    echo '<p></p>';
+
+	    echo currentFiatSymbol() . ' -> BTC: ' . amountToBTC();
+
+	    echo '<p></p>';
+
+	    echo currentFiatSymbol() . ' -> NAV: ' . amountToNAV();
+
+	    echo '<h3>Address QR Code</h3>';
+
+	    if (ADDRESS === null) {
+
+		echo 'Please set ?address / &amp;address to see QR Code.';
+		
+            } else {
+
+            ?>
+
+		<div id="qrcode"></div>
+		<script type="text/javascript">
+		 new QRCode(document.getElementById("qrcode"), "<?=qrAddress();?>");
+		</script>
+
+	    <?php
+
+	    }
+
+	    ?>
+	    
+	    <h3> Supported Pairs </h3>
+	    USD<br />
+            ISK<br />
+            HKD<br />
+            TWD<br />
+            CHF<br />
+            EUR<br />
+            DKK<br />
+            CLP<br />
+            CAD<br />
+            CNY<br />
+            THB<br />
+            AUD<br />
+            SGD<br />
+            KRW<br />
+            JPY<br />
+            PLN<br />
+            GBP<br />
+            SEK<br />
+            NZD<br />
+            BRL<br />
+            RUB<br />
+	</body>
+    </html>
 
 <?php
 
 }
-
-?>
-
-<h3> Supported Pairs </h3>
-USD<br />
-ISK<br />
-HKD<br />
-TWD<br />
-CHF<br />
-EUR<br />
-DKK<br />
-CLP<br />
-CAD<br />
-CNY<br />
-THB<br />
-AUD<br />
-SGD<br />
-KRW<br />
-JPY<br />
-PLN<br />
-GBP<br />
-SEK<br />
-NZD<br />
-BRL<br />
-RUB<br />
-  </body>
-</html>
