@@ -7,7 +7,7 @@ use \Endroid\QrCode\QrCode;
 # Input Constants
 @define('AMOUNT', $_GET['amount'] !== null ? floatval($_GET['amount']) : 0);
 @define('FIAT', $_GET['fiat'] !== null ? strtoupper($_GET['fiat']) : 'USD');
-@define('ADDRESS', $_GET['address']);
+@define('ADDRESS', str_replace('"', '', $_GET['address']));
 @define('GUI', $_GET['gui'] == 'true' || $_GET['gui'] == 1);
 
 # File Constants
